@@ -1,0 +1,36 @@
+period: "202501"
+reporting_currency: "USD"
+
+folders:
+  root: "./data/Finance"
+  mapping: "./data/Finance/Mapping"
+  tb: "./data/Finance/Consolidation/TB"
+  ic: "./data/Finance/IC"
+  fx: "./data/Finance/FX"
+  eliminations: "./data/Finance/Eliminations"
+  support: "./data/Finance/Support"
+  approvals: "./data/Finance/Approvals"
+
+naming:
+  tb_pattern: "TB_{entity}_{period}.xlsx"
+  master_tb: "Master_TB_{period}.xlsx"
+  fx_rates: "FX_Rates_{period}.xlsx"
+  fx_adjustments: "FX_Adjustments_{period}.xlsx"
+  support_pdf: "Support_{period}.pdf"
+
+pipeline:
+  - step: TBCollector
+    params:
+      required_columns: ["EntityCode","AccountCode","AccountName","Debit","Credit","Period","CurrencyCode"]  # TB schema:contentReference[oaicite:13]{index=13}
+      enforce_balanced: true
+  - step: FXTranslator
+    params:
+      fx_source: "file"   # "api" | "file"
+      file: "{fx}/FX_Rates_{period}.xlsx"
+      required_columns: ["CurrencyCode","FXRate","Period","Source"]  # FX schema:contentReference[oaicite:14]{index=14}
+      tolerance: 5
+  - step: PDFAssembler
+    params:
+      include:
+        - "{tb}/Master_TB_{period}.xlsx"
+        - "{fx}/FX_Adjustments_{period}.xlsx"
