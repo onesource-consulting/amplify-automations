@@ -1,25 +1,35 @@
-"""Base class for all processing steps."""
+"""Base class for pipeline steps.
+
+This abstract base class standardises how steps declare their inputs/outputs
+and execute work, while remaining lightweight for unit tests.
+"""
+
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Any, Dict
 
-from core.contracts import StepIO, ValidationResult, StepLog
+from core.contracts import StepIO, ValidationResult
 
 
 class Step(ABC):
-    """Abstract base class for pipeline steps.
+    """Abstract base class for all processing steps.
 
-    Each concrete step provides a :py:meth:`plan_io` method describing
-    the inputs and outputs it expects and a :py:meth:`run` method that
-    performs the actual work.
+    Concrete steps must implement:
+      - plan_io(): declare logical input/output file paths
+      - run(): perform the step and return a ValidationResult
     """
 
     name: str = "BaseStep"
 
-    def __init__(self, cfg: dict, folders: dict, naming: dict, period: str):
+    def __init__(self, cfg: Dict[str, Any], folders: Dict[str, str], naming: Dict[str, str], period: str) -> None:
+        # Store lightweight context/config so plugins and tests can operate.
         self.cfg = cfg
         self.folders = folders
         self.naming = naming
         self.period = period
+
+    # Required API -------------------------------------------------------
 
     @abstractmethod
     def plan_io(self) -> StepIO:
@@ -28,20 +38,15 @@ class Step(ABC):
 
     @abstractmethod
     def run(self, io: StepIO) -> ValidationResult:
-        """Execute the step and return a :class:`ValidationResult`."""
+        """Execute the step and return a ValidationResult."""
         raise NotImplementedError
 
     # Optional hooks -----------------------------------------------------
-    def before(self, io: StepIO) -> None:
-        """Hook executed before :py:meth:`run`.
 
-        Sub-classes can override this to perform preparation such as
-        logging or resource allocation.
-        """
+    def before(self, io: StepIO) -> None:
+        """Hook executed before run(). Override to add logging, prep, etc."""
+        pass
 
     def after(self, io: StepIO, vr: ValidationResult) -> None:
-        """Hook executed after :py:meth:`run`.
-
-        Useful for clean-up or sending metrics.
-        """
-
+        """Hook executed after run(). Override to add cleanup/metrics."""
+        pass
