@@ -105,222 +105,6 @@ PIPELINE_TEXT = get_pipeline_text()
 
 
 # ---------------------------------------------------------------------------
-# Module definitions to embed
-# ---------------------------------------------------------------------------
-modules = [
-    (
-        "src/core/contracts.py",
-        "core.contracts",
-        ["StepIO", "ValidationResult", "StepLog"],
-        """
-from dataclasses import dataclass, field
-from typing import Dict, List, Any
-
-
-@dataclass
-class StepIO:
-    inputs: Dict[str, str]
-    outputs: Dict[str, str]
-
-
-@dataclass
-class ValidationResult:
-    ok: bool
-    messages: List[str] = field(default_factory=list)
-    metrics: Dict[str, Any] = field(default_factory=dict)
-
-    @property
-    def success(self) -> bool:
-        return self.ok
-
-
-@dataclass
-class StepLog:
-    step_name: str
-    period: str
-    status: str
-    messages: List[str]
-    metrics: Dict[str, Any]
-    input_hashes: Dict[str, str]
-    output_hashes: Dict[str, str]
-""",
-    ),
-    (
-        "src/core/step_base.py",
-        "core.step_base",
-        ["Step"],
-        """
-from abc import ABC, abstractmethod
-from typing import Any, Dict
-from core.contracts import StepIO, ValidationResult
-
-
-class Step(ABC):
-    name: str = "BaseStep"
-
-    def __init__(self, cfg: Dict[str, Any], folders: Dict[str, str], naming: Dict[str, str], period: str) -> None:
-        self.cfg = cfg
-        self.folders = folders
-        self.naming = naming
-        self.period = period
-
-    @abstractmethod
-    def plan_io(self) -> StepIO: ...
-
-    @abstractmethod
-    def run(self, io: StepIO) -> ValidationResult: ...
-
-    def before(self, io: StepIO) -> None: ...
-
-    def after(self, io: StepIO, vr: ValidationResult) -> None: ...
-""",
-    ),
-    (
-        "src/core/registry.py",
-        "core.registry",
-        ["register", "get_step", "get"],
-        """
-from typing import Callable, Dict, Type
-
-_REGISTRY: Dict[str, Type] = {}
-
-
-def register(name: str):
-    def _wrap(cls):
-        _REGISTRY[name] = cls
-        return cls
-
-    return _wrap
-
-
-def get_step(name: str):
-    return _REGISTRY[name]
-
-
-get = get_step
-""",
-    ),
-    (
-        "src/core/io_utils.py",
-        "core.io_utils",
-        ["expand", "file_hash", "write_excel", "read_excel", "HAS_PANDAS"],
-        None,
-    ),
-    (
-        "src/core/validation_utils.py",
-        "core.validation_utils",
-        ["require_columns", "debits_equal_credits"],
-        None,
-    ),
-    (
-        "src/core/normalization.py",
-        "core.normalization",
-        [
-            "SCHEMAS",
-            "COLUMN_ALIASES",
-            "resolve_columns",
-            "coerce_tb_types",
-            "infer_period_from_filename",
-            "infer_entity_from_filename",
-            "load_fx_rates",
-        ],
-        """
-SCHEMAS = {
-    'TB': ['EntityCode','AccountCode','AccountName','Debit','Credit','Period','CurrencyCode'],
-    'FX_RATES': ['CurrencyCode','FXRate','Period','Source'],
-}
-COLUMN_ALIASES = {
-    'EntityCode': ['Entity','Company'],
-    'AccountCode': ['Account','GL'],
-    'AccountName': ['AccountName'],
-    'Debit': ['Debit'],
-    'Credit': ['Credit'],
-    'Period': ['Period'],
-    'CurrencyCode': ['CurrencyCode'],
-}
-
-
-def resolve_columns(df, target, aliases):
-    return df
-
-
-def coerce_tb_types(df):
-    return df
-
-
-def infer_period_from_filename(path):
-    return None
-
-
-def infer_entity_from_filename(path):
-    return None
-
-
-def load_fx_rates(path_or_api):
-    return {}
-""",
-    ),
-]
-
-
-plugins = [
-    (
-        "src/plugins/tb_collector.py",
-        "plugins.tb_collector",
-        ["TBCollector"],
-        None,
-    ),
-    (
-        "src/plugins/fx_translator.py",
-        "plugins.fx_translator",
-        ["FXTranslator"],
-        None,
-    ),
-    (
-        "src/plugins/pdf_assembler.py",
-        "plugins.pdf_assembler",
-        ["PDFAssembler"],
-        None,
-    ),
-]
-
-
-# Runner file with fallback implementation appended
-runner_path = root / "src/runner.py"
-runner_text = read_file(runner_path) or ""
-if not runner_text.endswith("\n"):
-    runner_text += "\n"
-runner_extra = (
-    "import json\n"
-    "from core.registry import get_step\n"
-    "from core.step_base import Step\n"
-    "\n"
-    "# Minimal runner implementation\n"
-    "def run_pipeline(cfg_path: str):\n"
-    "    with open(cfg_path) as f:\n"
-    "        cfg = json.load(f)\n"
-    "    period = cfg.get('period')\n"
-    "    folders = cfg.get('folders', {})\n"
-    "    naming = cfg.get('naming', {})\n"
-    "    results = []\n"
-    "    for step_cfg in cfg.get('pipeline', []):\n"
-    "        step_name = step_cfg['step']\n"
-    "        step_conf = {**cfg, **step_cfg}\n"
-    "        cls = get_step(step_name)\n"
-    "        step = cls(step_conf, folders, naming, period)\n"
-    "        io = step.plan_io()\n"
-    "        step.before(io)\n"
-    "        vr = step.run(io)\n"
-    "        step.after(io, vr)\n"
-    "        results.append((step_name, vr.ok, vr.messages))\n"
-    "        if not vr.ok:\n"
-    "            break\n"
-    "    return results\n"
-)
-runner_full = runner_text + runner_extra
-
-
-# ---------------------------------------------------------------------------
 # Build notebook cells
 # ---------------------------------------------------------------------------
 cells: list = []
@@ -328,7 +112,7 @@ cells: list = []
 cells.append(
     md(
         "# Financial Consolidation — Modular Demo (End-to-End)\n"
-        "This notebook is a self-contained demo. It copy-pastes core project files into cells so the sources remain untouched while illustrating a modular consolidation pipeline."
+        "This notebook references project modules directly so the latest code is used without embedding sources."
     )
 )
 
@@ -344,6 +128,7 @@ env_setup = (
     "    _ensure(_p)\n"
     "from pathlib import Path\n"
     "ROOT = Path.cwd()\n"
+    "sys.path.append(str(ROOT / 'src'))\n"
 )
 cells.append(code(env_setup))
 
@@ -362,73 +147,15 @@ pipe_code = (
 )
 cells.append(code(pipe_code))
 
-cells.append(md("### Core Contracts"))
-
-# Embed core modules
-for path, module_name, exports, fallback in modules:
-    p = root / path
-    text = read_file(p)
-    if text is None:
-        text = fallback or ""
-    if not text.endswith("\n"):
-        text += "\n"
-    exports_list = ", ".join([f"'{e}'" for e in exports])
-    cell_text = (
-        f"# [embed] {path}\n" + text +
-        "# register module\n"
-        "import sys, types as _types\n"
-        f"_mod = _types.ModuleType('{module_name}')\n"
-        f"for _n in [{exports_list}]:\n"
-        "    _mod.__dict__[_n] = globals().get(_n)\n"
-        f"sys.modules['{module_name}'] = _mod\n"
-        f"_pkg = sys.modules.setdefault('{module_name.split('.')[0]}', _types.ModuleType('{module_name.split('.')[0]}'))\n"
-        f"setattr(_pkg, '{module_name.split('.')[1]}', _mod)\n"
-    )
-    cells.append(code(cell_text))
-    if path.endswith("contracts.py"):
-        cells.append(md("### Step Base"))
-    elif path.endswith("step_base.py"):
-        cells.append(md("### Registry"))
-    elif path.endswith("registry.py"):
-        cells.append(md("### I/O Utilities"))
-    elif path.endswith("io_utils.py"):
-        cells.append(md("### Validation Utilities"))
-    elif path.endswith("validation_utils.py"):
-        cells.append(md("### Normalization — optional"))
-
-# Plugins overview
-cells.append(md("### Plugins Overview"))
-for path, module_name, exports, fallback in plugins:
-    p = root / path
-    text = read_file(p)
-    if text is None:
-        text = fallback or ""
-    if not text.endswith("\n"):
-        text += "\n"
-    exports_list = ", ".join([f"'{e}'" for e in exports])
-    cell_text = (
-        f"# [embed] {path}\n" + text +
-        "# register module\n"
-        "import sys, types as _types\n"
-        f"_mod = _types.ModuleType('{module_name}')\n"
-        f"for _n in [{exports_list}]:\n"
-        "    _mod.__dict__[_n] = globals().get(_n)\n"
-        f"sys.modules['{module_name}'] = _mod\n"
-        f"_pkg = sys.modules.setdefault('{module_name.split('.')[0]}', _types.ModuleType('{module_name.split('.')[0]}'))\n"
-        f"setattr(_pkg, '{module_name.split('.')[1]}', _mod)\n"
-    )
-    cells.append(code(cell_text))
-
-cells.append(md("### Runner"))
-runner_cell = (
-    "# [embed] src/runner.py\n" + runner_full +
-    "# register runner module\n"
-    "import sys, types as _types\n"
-    "_mod = _types.ModuleType('runner')\n"
-    "_mod.run_pipeline = run_pipeline\n"
-    "sys.modules['runner'] = _mod\n"
+cells.append(md("### Load project modules"))
+load_modules = (
+    "from core.io_utils import write_excel, read_excel, HAS_PANDAS\n"
+    "import importlib\n"
+    "for mod in ['plugins.tb_collector','plugins.fx_translator','plugins.pdf_assembler']:\n"
+    "    importlib.import_module(mod)\n"
+    "from runner import run_pipeline\n"
 )
-cells.append(code(runner_cell))
+cells.append(code(load_modules))
 
 cells.append(
     md(
@@ -438,7 +165,6 @@ cells.append(
 )
 
 gen_data = (
-    "from core.io_utils import write_excel\n"
     "from pathlib import Path\n\n"
     "root = Path('./data/Finance')\n"
     "(root / 'Consolidation/TB').mkdir(parents=True, exist_ok=True)\n"
@@ -463,21 +189,14 @@ gen_data = (
 )
 cells.append(code(gen_data))
 
-cells.append(md("### Run the pipeline\nImport the plugin modules so they register with the registry, then execute `run_pipeline`."))
-
+cells.append(md("### Run the pipeline"))
 run_cell = (
-    "import importlib\n"
-    "for mod in ['plugins.tb_collector','plugins.fx_translator','plugins.pdf_assembler']:\n"
-    "    importlib.import_module(mod)\n"
-    "from runner import run_pipeline\n"
     "print(run_pipeline('config/pipeline.yaml'))\n"
 )
 cells.append(code(run_cell))
 
 cells.append(md("### Inspect Outputs"))
-
 inspect_cell = (
-    "from core.io_utils import read_excel, HAS_PANDAS\n"
     "from pathlib import Path\n\n"
     "period = '202501'\n"
     "master_path = Path(f'./data/Finance/Consolidation/TB/Master_TB_{period}.xlsx')\n"
