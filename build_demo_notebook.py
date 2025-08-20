@@ -149,11 +149,11 @@ cells.append(code(pipe_code))
 
 cells.append(md("### Load project modules"))
 load_modules = (
-    "from core.io_utils import write_excel, read_excel, HAS_PANDAS\n"
+    "from amplify_automations.core.io_utils import write_excel, read_excel, HAS_PANDAS\n"
     "import importlib\n"
-    "for mod in ['plugins.tb_collector','plugins.fx_translator','plugins.pdf_assembler']:\n"
+    "for mod in ['amplify_automations.plugins.tb_collector','amplify_automations.plugins.fx_translator','amplify_automations.plugins.pdf_assembler']:\n"
     "    importlib.import_module(mod)\n"
-    "from runner import run_pipeline\n"
+    "from amplify_automations.runner import run_pipeline\n"
 )
 cells.append(code(load_modules))
 

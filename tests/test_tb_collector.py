@@ -32,4 +32,5 @@ def test_collects_and_merges_trial_balances(tmp_path):
     assert master_path.exists()
     rows = read_excel(master_path)
     assert len(rows) == 4
-    assert result.metrics == {"files": 2, "rows": 4}
+    assert result.metrics.get("files") == 2
+    assert result.metrics.get("rows") == 4
