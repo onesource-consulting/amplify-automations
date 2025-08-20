@@ -72,7 +72,3 @@ pytest
 Contributions for new automation steps or improvements to existing plugins are
 welcome.
 
-## License
-
-Distributed under the MIT license; see `LICENSE` for details.
-
