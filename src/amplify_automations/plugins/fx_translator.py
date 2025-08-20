@@ -10,10 +10,10 @@ from __future__ import annotations
 
 from typing import Dict, List
 
-from core.registry import register
-from core.step_base import Step
-from core.contracts import StepIO, ValidationResult
-from core.io_utils import expand, read_excel, write_excel
+from ..core.registry import register
+from ..core.step_base import Step
+from ..core.contracts import StepIO, ValidationResult
+from ..core.io_utils import expand, read_excel, write_excel
 
 
 @register("FXTranslator")
