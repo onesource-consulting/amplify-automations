@@ -37,3 +37,33 @@ def test_applies_fx_rates(tmp_path):
     assert float(adjusted[1]["ReportingCurrencyAmount"]) == round((0 - 200) * 1.1, 2)
     fx_adj = read_excel(io.outputs["fx_adjustments"])
     assert fx_adj[0]["Period"] == "202301"
+
+
+def test_handles_dataframe_input(monkeypatch):
+    class DummyDF:
+        def __init__(self, records):
+            self._records = records
+
+        def to_dict(self, orient="records"):
+            assert orient == "records"
+            return self._records
+
+    tb = DummyDF([
+        {"EntityCode": "E1", "AccountCode": "A1", "Debit": 50, "Credit": 0, "CurrencyCode": "USD"}
+    ])
+    rates = DummyDF([
+        {"CurrencyCode": "USD", "FXRate": 1.0}
+    ])
+
+    def fake_read_excel(path):
+        return rates if "Rates" in path else tb
+
+    monkeypatch.setattr("plugins.fx_translator.read_excel", fake_read_excel)
+    monkeypatch.setattr("plugins.fx_translator.write_excel", lambda *a, **k: None)
+
+    cfg = {"params": {"fx_source": "file"}, "reporting_currency": "USD"}
+    folders = {"tb": ".", "fx": "."}
+    naming = {"master_tb": "Master.xlsx", "fx_rates": "Rates.xlsx", "fx_adjustments": "Adj.xlsx"}
+    step = FXTranslator(cfg, folders, naming, period="202301")
+    result = step.run(step.plan_io())
+    assert result.success

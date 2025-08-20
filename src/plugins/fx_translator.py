@@ -37,9 +37,13 @@ class FXTranslator(Step):
         if fx_source != "file":  # pragma: no cover - defensive
             raise ValueError("Only file FX sources are supported in the test implementation")
         rows = read_excel(rates_file)
-        if not isinstance(rows, list):
-            rows = rows.to_dict(orient="records")
-        return {row["CurrencyCode"]: float(row["FXRate"]) for row in rows}
+        if isinstance(rows, list):
+            records = rows
+        elif hasattr(rows, "to_dict"):
+            records = rows.to_dict(orient="records")
+        else:  # pragma: no cover - defensive
+            raise TypeError("FX rates must be list-like or DataFrame-like")
+        return {r["CurrencyCode"]: float(r["FXRate"]) for r in records}
 
     def run(self, io: StepIO) -> ValidationResult:
         params = self.cfg["params"]
