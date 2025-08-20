@@ -1,10 +1,7 @@
 from pathlib import Path
-import sys
 
-sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
-
-from core.io_utils import write_excel, read_excel
-from plugins.fx_translator import FXTranslator
+from amplify_automations.core.io_utils import write_excel, read_excel
+from amplify_automations.plugins.fx_translator import FXTranslator
 
 
 def test_applies_fx_rates(tmp_path):
@@ -58,8 +55,8 @@ def test_handles_dataframe_input(monkeypatch):
     def fake_read_excel(path):
         return rates if "Rates" in path else tb
 
-    monkeypatch.setattr("plugins.fx_translator.read_excel", fake_read_excel)
-    monkeypatch.setattr("plugins.fx_translator.write_excel", lambda *a, **k: None)
+    monkeypatch.setattr("amplify_automations.plugins.fx_translator.read_excel", fake_read_excel)
+    monkeypatch.setattr("amplify_automations.plugins.fx_translator.write_excel", lambda *a, **k: None)
 
     cfg = {"params": {"fx_source": "file"}, "reporting_currency": "USD"}
     folders = {"tb": ".", "fx": "."}

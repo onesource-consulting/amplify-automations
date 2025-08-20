@@ -17,9 +17,9 @@ import pytest
 
 pd = pytest.importorskip("pandas")
 
-from src.core.io_utils import expand, file_hash, write_excel
-from src.core.logging_utils import append_step_log, now_ts
-from src.core.validation_utils import debits_equal_credits, require_columns
+from amplify_automations.core.io_utils import expand, file_hash, write_excel
+from amplify_automations.core.logging_utils import append_step_log, now_ts
+from amplify_automations.core.validation_utils import debits_equal_credits, require_columns
 
 
 def test_expand_basic():

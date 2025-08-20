@@ -26,15 +26,15 @@ except Exception:  # pragma: no cover
     np = None  # type: ignore
     HAS_PANDAS = False
 
-from core.registry import register
-from core.step_base import Step
-from core.contracts import StepIO, ValidationResult
-from core.io_utils import expand, read_excel, write_excel
-from core.validation_utils import require_columns, debits_equal_credits
+from ..core.registry import register
+from ..core.step_base import Step
+from ..core.contracts import StepIO, ValidationResult
+from ..core.io_utils import expand, read_excel, write_excel
+from ..core.validation_utils import require_columns, debits_equal_credits
 
 # Try to use a shared normalisation module if present; otherwise provide light defaults.
 try:  # pragma: no cover (imported in main project)
-    from core.normalization import (
+    from ..core.normalization import (
         COLUMN_ALIASES,
         SCHEMAS,
         coerce_tb_types,

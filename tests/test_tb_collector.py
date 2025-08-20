@@ -1,10 +1,7 @@
 from pathlib import Path
-import sys
 
-sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
-
-from core.io_utils import write_excel, read_excel
-from plugins.tb_collector import TBCollector
+from amplify_automations.core.io_utils import write_excel, read_excel
+from amplify_automations.plugins.tb_collector import TBCollector
 
 
 def test_collects_and_merges_trial_balances(tmp_path):

@@ -1,10 +1,7 @@
 from pathlib import Path
-import sys
 
-sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
-
-from core.io_utils import write_excel
-from plugins.pdf_assembler import PDFAssembler
+from amplify_automations.core.io_utils import write_excel
+from amplify_automations.plugins.pdf_assembler import PDFAssembler
 
 
 def test_merges_generated_pdfs(tmp_path):

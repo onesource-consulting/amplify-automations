@@ -11,7 +11,7 @@ from typing import Callable, Dict, Type, TYPE_CHECKING
 
 if TYPE_CHECKING:
     # Only imported for type checkers to avoid runtime cycles
-    from core.step_base import Step
+    from .step_base import Step
 
 # Global registry mapping step names to their classes.
 _REGISTRY: Dict[str, Type["Step"]] = {}

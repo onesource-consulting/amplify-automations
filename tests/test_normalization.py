@@ -2,7 +2,7 @@ import pytest
 
 pd = pytest.importorskip("pandas")
 
-from core import normalization as norm
+from amplify_automations.core import normalization as norm
 
 
 def test_resolve_and_coerce(tmp_path):

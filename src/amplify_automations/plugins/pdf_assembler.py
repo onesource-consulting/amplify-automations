@@ -11,10 +11,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import List
 
-from core.registry import register
-from core.step_base import Step
-from core.contracts import StepIO, ValidationResult
-from core.io_utils import expand, read_excel
+from ..core.registry import register
+from ..core.step_base import Step
+from ..core.contracts import StepIO, ValidationResult
+from ..core.io_utils import expand, read_excel
 
 
 def excel_to_simple_pdf(excel_path: str, pdf_path: str) -> None:
