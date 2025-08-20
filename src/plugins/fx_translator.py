@@ -37,6 +37,8 @@ class FXTranslator(Step):
         if fx_source != "file":  # pragma: no cover - defensive
             raise ValueError("Only file FX sources are supported in the test implementation")
         rows = read_excel(rates_file)
+        if not isinstance(rows, list):
+            rows = rows.to_dict(orient="records")
         return {row["CurrencyCode"]: float(row["FXRate"]) for row in rows}
 
     def run(self, io: StepIO) -> ValidationResult:
@@ -45,6 +47,8 @@ class FXTranslator(Step):
         reporting = self.cfg.get("reporting_currency", "USD")
 
         tb = read_excel(io.inputs["master_tb"])
+        if not isinstance(tb, list):
+            tb = tb.to_dict(orient="records")
         rates = self._load_rates(params.get("fx_source", "file"), io.inputs["fx_rates"], reporting)
 
         if tb and "CurrencyCode" not in tb[0]:

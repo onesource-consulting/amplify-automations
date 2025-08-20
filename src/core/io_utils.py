@@ -99,7 +99,7 @@ def write_excel(
         rows = list(obj)
     cols = list(headers) if headers else (list(rows[0].keys()) if rows else [])
     with p.open("w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=cols)
+        w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
         w.writeheader()
         for r in rows:
             w.writerow(r)

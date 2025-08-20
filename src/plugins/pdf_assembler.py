@@ -20,6 +20,8 @@ from core.io_utils import expand, read_excel
 def excel_to_simple_pdf(excel_path: str, pdf_path: str) -> None:
     """Create a rudimentary PDF (actually a text file) from tabular data."""
     rows = read_excel(excel_path)
+    if not isinstance(rows, list):
+        rows = rows.to_dict(orient="records")
     with open(pdf_path, "w") as f:
         for row in rows[:1000]:
             f.write(" | ".join(str(v) for v in row.values()))
