@@ -23,7 +23,7 @@ def append_step_log(folder: str, log_row: dict) -> None:
         df = pd.concat([df, pd.DataFrame([log_row])], ignore_index=True)
     except FileNotFoundError:
         df = pd.DataFrame([log_row])
-    df.to_excel(log_path, index=False)
+    df.to_excel(str(log_path), index=False)
 
 
 def now_ts() -> str:

@@ -30,10 +30,14 @@ def test_applies_fx_rates(tmp_path):
 
     assert result.success
     adjusted = read_excel(io.outputs["adjusted_tb"])
+    if not isinstance(adjusted, list):
+        adjusted = adjusted.to_dict(orient="records")
     assert float(adjusted[1]["FXRate"]) == 1.1
     assert float(adjusted[1]["ReportingCurrencyAmount"]) == round((0 - 200) * 1.1, 2)
     fx_adj = read_excel(io.outputs["fx_adjustments"])
-    assert fx_adj[0]["Period"] == "202301"
+    if not isinstance(fx_adj, list):
+        fx_adj = fx_adj.to_dict(orient="records")
+    assert str(fx_adj[0]["Period"]) == "202301"
 
 
 def test_handles_dataframe_input(monkeypatch):
