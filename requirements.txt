@@ -1,0 +1,7 @@
+nbformat==5.10.4
+pandas==2.0.3
+openpyxl==3.1.2
+requests==2.31.0
+PyPDF2==3.0.1
+fpdf2==2.7.8
+pyyaml==6.0.1
