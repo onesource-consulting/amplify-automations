@@ -54,15 +54,56 @@ def _write_catalog(path: Path, data: Sequence[MutableMapping[str, object]]) -> N
     path.write_text(text + "\n", encoding="utf-8")
 
 
+_TRAILING_DESCRIPTOR_KEYWORDS: Tuple[str, ...] = (
+    "mock",
+    "sandbox",
+    "integration",
+    "automation",
+    "workflow",
+    "templating",
+)
+
+
+def _simplify_tool_name(tool: str) -> str:
+    """Return ``tool`` without trailing descriptive phrases.
+
+    Tutorials sometimes describe tools with phrases such as
+    ``"Deltek Vantagepoint mock API integration"``.  The catalogue should
+    capture only the underlying software names so that downstream consumers can
+    group tutorials by the same tool regardless of how the author phrased the
+    description.  This helper trims the trailing descriptor when it starts with
+    one of the keywords in :data:`_TRAILING_DESCRIPTOR_KEYWORDS`.
+    """
+
+    if not isinstance(tool, str):
+        return ""
+
+    name = " ".join(tool.split()).strip()
+    if not name:
+        return ""
+
+    lower_name = name.casefold()
+    for keyword in _TRAILING_DESCRIPTOR_KEYWORDS:
+        marker = f" {keyword}"
+        idx = lower_name.find(marker)
+        if idx != -1:
+            name = name[:idx]
+            lower_name = lower_name[:idx]
+
+    simplified = name.strip()
+    return simplified or ""
+
+
 def _normalise_tools(tools: Iterable[str]) -> List[str]:
-    """Return ``tools`` as a list with duplicates removed, preserving order."""
+    """Return simplified tool names with duplicates removed, preserving order."""
 
     seen = set()
     normalised: List[str] = []
     for item in tools:
-        if item not in seen:
-            normalised.append(item)
-            seen.add(item)
+        simplified = _simplify_tool_name(item)
+        if simplified and simplified not in seen:
+            normalised.append(simplified)
+            seen.add(simplified)
     return normalised
 
 

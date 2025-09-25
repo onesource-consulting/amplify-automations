@@ -8,9 +8,9 @@
         "id": "d2b6abd9-4752-4002-a02a-3209710f1195",
         "tutorial": "Client_Engagement_Letter_Draft_Tutorial.ipynb",
         "tools": [
-          "Deltek Vantagepoint mock API integration",
-          "Practice CS mock API integration",
-          "Engagement letter templating"
+          "Deltek Vantagepoint",
+          "Practice CS",
+          "Engagement letter"
         ]
       }
     ]
