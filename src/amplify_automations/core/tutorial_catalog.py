@@ -11,12 +11,17 @@ from __future__ import annotations
 
 import json
 from collections.abc import MutableMapping
-from pathlib import Path
-from typing import Iterable, List, Sequence
+from pathlib import Path, PurePosixPath
+from typing import Iterable, List, Sequence, Tuple
 from uuid import UUID, uuid4
 
 
-DEFAULT_CATALOG_PATH = Path("notebooks/tutorial_catalog.json")
+DEFAULT_CATALOG_DIRECTORY = Path("notebooks")
+# ``DEFAULT_CATALOG_PATH`` is retained for backwards compatibility with previous
+# releases that imported it directly.  It now points at the notebooks directory
+# rather than a specific file because catalogue filenames are derived from the
+# step identifier at runtime.
+DEFAULT_CATALOG_PATH = DEFAULT_CATALOG_DIRECTORY
 
 
 def _load_catalog(path: Path) -> List[MutableMapping[str, object]]:
@@ -61,6 +66,20 @@ def _normalise_tools(tools: Iterable[str]) -> List[str]:
     return normalised
 
 
+def _normalise_tutorial_reference(value: str | Path) -> str:
+    """Return a canonical tutorial notebook reference without the ``notebooks`` prefix."""
+
+    path = Path(value)
+    parts = list(path.parts)
+    if parts and parts[0] == "notebooks":
+        parts = parts[1:]
+
+    if not parts:
+        return ""
+
+    return str(PurePosixPath(*parts))
+
+
 def _canonicalise_uuid(value: str) -> str | None:
     """Return ``value`` as a canonical UUID string if possible."""
 
@@ -78,6 +97,22 @@ def _generate_unique_id(used: set[str]) -> str:
         if candidate not in used:
             used.add(candidate)
             return candidate
+
+
+def _discover_catalog_for_step(step_name: str) -> Tuple[Path | None, List[MutableMapping[str, object]]]:
+    """Return the catalogue path and data for ``step_name`` if it already exists."""
+
+    directory = DEFAULT_CATALOG_DIRECTORY
+    if not directory.exists():
+        return None, []
+
+    for candidate in sorted(directory.glob("*.json")):
+        data = _load_catalog(candidate)
+        for entry in data:
+            if entry.get("name") == step_name:
+                return candidate, data
+
+    return None, []
 
 
 def register_tutorial(
@@ -101,12 +136,20 @@ def register_tutorial(
     tools:
         Iterable of tool names that comprise the documented toolset.
     catalog_path:
-        Optional explicit path to the catalogue JSON.  When omitted the default
-        ``notebooks/tutorial_catalog.json`` file is used.
+        Optional explicit path to the catalogue JSON.  When omitted the helper
+        stores entries in ``notebooks/<step-id>.json`` where ``<step-id>`` is the
+        UUID assigned to the automation step.  If a catalogue for the step
+        already exists it is reused regardless of its current filename.
     """
 
-    path = Path(catalog_path) if catalog_path is not None else DEFAULT_CATALOG_PATH
-    data = _load_catalog(path)
+    using_default_location = catalog_path is None
+    if catalog_path is not None:
+        path = Path(catalog_path)
+        data = _load_catalog(path)
+    else:
+        path, data = _discover_catalog_for_step(step_name)
+        if path is None:
+            data = []
 
     # Track used identifiers across the full catalogue so new IDs remain unique.
     used_ids: set[str] = set()
@@ -120,17 +163,25 @@ def register_tutorial(
                     entry["id"] = canonical
             else:
                 used_ids.add(entry_id)
-        for toolset in entry.get("toolsets", []):
-            if isinstance(toolset, MutableMapping):
-                toolset_id = toolset.get("id")
-                if isinstance(toolset_id, str):
-                    canonical = _canonicalise_uuid(toolset_id)
-                    if canonical is not None:
-                        used_ids.add(canonical)
-                        if canonical != toolset_id:
-                            toolset["id"] = canonical
-                    else:
-                        used_ids.add(toolset_id)
+        toolset_list = entry.get("toolsets", [])
+        if isinstance(toolset_list, list):
+            for toolset in toolset_list:
+                if isinstance(toolset, MutableMapping):
+                    toolset_id = toolset.get("id")
+                    if isinstance(toolset_id, str):
+                        canonical = _canonicalise_uuid(toolset_id)
+                        if canonical is not None:
+                            used_ids.add(canonical)
+                            if canonical != toolset_id:
+                                toolset["id"] = canonical
+                        else:
+                            used_ids.add(toolset_id)
+
+                    tutorial_ref = toolset.get("tutorial")
+                    if isinstance(tutorial_ref, str):
+                        normalised_ref = _normalise_tutorial_reference(tutorial_ref)
+                        if tutorial_ref != normalised_ref:
+                            toolset["tutorial"] = normalised_ref
 
     # Locate or create the step entry.
     step_entry: MutableMapping[str, object] | None = None
@@ -157,7 +208,7 @@ def register_tutorial(
     assert isinstance(toolsets, list)  # for type checkers
 
     normalised_tools = _normalise_tools(tools)
-    tutorial_name = str(tutorial_path)
+    tutorial_name = _normalise_tutorial_reference(tutorial_path)
 
     toolset_entry: MutableMapping[str, object] | None = None
     for item in toolsets:
@@ -182,8 +233,20 @@ def register_tutorial(
         if isinstance(toolset_list, list):
             toolset_list.sort(key=lambda item: str(item.get("tutorial", "")))
 
-    _write_catalog(path, data)
+    if using_default_location:
+        step_identifier = str(step_entry["id"])
+        final_path = DEFAULT_CATALOG_DIRECTORY / f"{step_identifier}.json"
+    else:
+        assert path is not None  # for mypy/mind
+        final_path = path
+
+    if path is not None and final_path != path and using_default_location:
+        _write_catalog(final_path, data)
+        if path.exists():
+            path.unlink()
+    else:
+        _write_catalog(final_path, data)
 
 
-__all__ = ["register_tutorial", "DEFAULT_CATALOG_PATH"]
+__all__ = ["register_tutorial", "DEFAULT_CATALOG_DIRECTORY", "DEFAULT_CATALOG_PATH"]
 
