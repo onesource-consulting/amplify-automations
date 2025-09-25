@@ -355,13 +355,12 @@ def build_notebook() -> None:
             "Generate draft client engagement letters from CRM metadata, service "
             "catalogues, and reusable templates."
         ),
-        tutorial_path=f"notebooks/{out_path.name}",
+        tutorial_path=out_path.name,
         tools=[
             "Deltek Vantagepoint mock API integration",
             "Practice CS mock API integration",
             "Engagement letter templating",
         ],
-        catalog_path=ROOT / "tutorial_catalog.json",
     )
 
     print(f"Wrote {out_path.name} — open it in Jupyter and Run All to experience the tutorial.")
