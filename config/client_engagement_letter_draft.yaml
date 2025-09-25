@@ -1,0 +1,19 @@
+# Example pipeline configuration dedicated to the ClientEngagementLetterDraft step.
+period: "202501"
+folders:
+  root: "./data/Finance"
+  support: "./data/Finance/Engagements"
+naming: {}
+pipeline:
+  - step: ClientEngagementLetterDraft
+    params:
+      client_metadata: "{support}/client_metadata_{period}.json"
+      service_lines: "{support}/service_lines.xlsx"
+      template_path: "{support}/Engagement_Letter_Template.dotx"
+      output_folder: "{support}/Drafts_{period}"
+      manifest_path: "{support}/Drafts_{period}/manifest.json"
+      notification_log: "{support}/Drafts_{period}/notifications.txt"
+      prior_letters_folder: "{support}/PriorYearDrafts"
+      notification_recipients:
+        - "teams://StaffAccountant"
+        - "teams://Manager"
