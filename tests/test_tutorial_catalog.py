@@ -110,6 +110,26 @@ def test_register_tutorial_adds_additional_toolsets(tmp_path):
     assert len(ids) == 3  # all identifiers should be unique
 
 
+def test_tool_names_are_simplified_to_software_titles(tmp_path):
+    catalog = tmp_path / "catalog.json"
+
+    register_tutorial(
+        step_name="ExampleStep",
+        description="Example description",
+        tutorial_path="notebooks/example.ipynb",
+        tools=[
+            "Deltek Vantagepoint mock API integration",
+            "Practice CS mock API integration",
+            "Practice CS",
+        ],
+        catalog_path=catalog,
+    )
+
+    entry = _load(catalog)[0]
+    toolset = entry["toolsets"][0]
+    assert toolset["tools"] == ["Deltek Vantagepoint", "Practice CS"]
+
+
 def test_default_catalog_path_uses_step_uuid(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 

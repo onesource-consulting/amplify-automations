@@ -357,9 +357,9 @@ def build_notebook() -> None:
         ),
         tutorial_path=out_path.name,
         tools=[
-            "Deltek Vantagepoint mock API integration",
-            "Practice CS mock API integration",
-            "Engagement letter templating",
+            "Deltek Vantagepoint",
+            "Practice CS",
+            "Engagement letter",
         ],
     )
 
