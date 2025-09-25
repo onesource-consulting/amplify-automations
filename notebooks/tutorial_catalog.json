@@ -1,0 +1,18 @@
+[
+  {
+    "id": "fdc92fe1-f8ab-42b5-b3d0-9e0beb1b9ece",
+    "name": "ClientEngagementLetterDraft",
+    "description": "Generate draft client engagement letters from CRM metadata, service catalogues, and reusable templates.",
+    "toolsets": [
+      {
+        "id": "d2b6abd9-4752-4002-a02a-3209710f1195",
+        "tutorial": "notebooks/Client_Engagement_Letter_Draft_Tutorial.ipynb",
+        "tools": [
+          "Deltek Vantagepoint mock API integration",
+          "Practice CS mock API integration",
+          "Engagement letter templating"
+        ]
+      }
+    ]
+  }
+]

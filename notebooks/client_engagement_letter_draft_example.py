@@ -4,6 +4,14 @@ from __future__ import annotations
 
 from pathlib import Path
 import json
+import sys
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = PROJECT_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from amplify_automations.core.tutorial_catalog import register_tutorial
 
 try:
     import nbformat as nbf
@@ -340,6 +348,21 @@ def build_notebook() -> None:
     out_path = ROOT / "Client_Engagement_Letter_Draft_Tutorial.ipynb"
     with out_path.open("w", encoding="utf-8") as fh:
         nbf.write(nb, fh)
+
+    register_tutorial(
+        step_name="ClientEngagementLetterDraft",
+        description=(
+            "Generate draft client engagement letters from CRM metadata, service "
+            "catalogues, and reusable templates."
+        ),
+        tutorial_path=f"notebooks/{out_path.name}",
+        tools=[
+            "Deltek Vantagepoint mock API integration",
+            "Practice CS mock API integration",
+            "Engagement letter templating",
+        ],
+        catalog_path=ROOT / "tutorial_catalog.json",
+    )
 
     print(f"Wrote {out_path.name} — open it in Jupyter and Run All to experience the tutorial.")
 
