@@ -13,7 +13,7 @@ import json
 from collections.abc import MutableMapping
 from pathlib import Path
 from typing import Iterable, List, Sequence
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 
 DEFAULT_CATALOG_PATH = Path("notebooks/tutorial_catalog.json")
@@ -61,11 +61,20 @@ def _normalise_tools(tools: Iterable[str]) -> List[str]:
     return normalised
 
 
+def _canonicalise_uuid(value: str) -> str | None:
+    """Return ``value`` as a canonical UUID string if possible."""
+
+    try:
+        return str(UUID(value))
+    except (TypeError, ValueError, AttributeError):
+        return None
+
+
 def _generate_unique_id(used: set[str]) -> str:
-    """Return a random hexadecimal identifier that is not present in ``used``."""
+    """Return a random UUID identifier that is not present in ``used``."""
 
     while True:
-        candidate = uuid4().hex
+        candidate = str(uuid4())
         if candidate not in used:
             used.add(candidate)
             return candidate
@@ -104,12 +113,24 @@ def register_tutorial(
     for entry in data:
         entry_id = entry.get("id")
         if isinstance(entry_id, str):
-            used_ids.add(entry_id)
+            canonical = _canonicalise_uuid(entry_id)
+            if canonical is not None:
+                used_ids.add(canonical)
+                if canonical != entry_id:
+                    entry["id"] = canonical
+            else:
+                used_ids.add(entry_id)
         for toolset in entry.get("toolsets", []):
             if isinstance(toolset, MutableMapping):
                 toolset_id = toolset.get("id")
                 if isinstance(toolset_id, str):
-                    used_ids.add(toolset_id)
+                    canonical = _canonicalise_uuid(toolset_id)
+                    if canonical is not None:
+                        used_ids.add(canonical)
+                        if canonical != toolset_id:
+                            toolset["id"] = canonical
+                    else:
+                        used_ids.add(toolset_id)
 
     # Locate or create the step entry.
     step_entry: MutableMapping[str, object] | None = None

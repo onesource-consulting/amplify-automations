@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from amplify_automations.core.tutorial_catalog import register_tutorial
@@ -9,6 +10,8 @@ from amplify_automations.core.tutorial_catalog import register_tutorial
 def _load(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
+
+UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 
 def test_register_tutorial_creates_catalog(tmp_path):
     catalog = tmp_path / "catalog.json"
@@ -27,13 +30,14 @@ def test_register_tutorial_creates_catalog(tmp_path):
     entry = data[0]
     assert entry["name"] == "ExampleStep"
     assert entry["description"] == "Example description"
-    assert "id" in entry
+    assert UUID_PATTERN.match(entry["id"]) is not None
 
     toolsets = entry["toolsets"]
     assert len(toolsets) == 1
     toolset = toolsets[0]
     assert toolset["tutorial"] == "notebooks/example.ipynb"
     assert toolset["tools"] == ["Tool A", "Tool B"]
+    assert UUID_PATTERN.match(toolset["id"]) is not None
     assert toolset["id"] != entry["id"]
 
 
@@ -61,10 +65,12 @@ def test_register_tutorial_updates_existing_entries(tmp_path):
     )
 
     updated = _load(catalog)[0]
+    assert UUID_PATTERN.match(updated["id"]) is not None
     assert updated["id"] == original_step_id
     assert updated["description"] == "Refreshed description"
 
     toolset = updated["toolsets"][0]
+    assert UUID_PATTERN.match(toolset["id"]) is not None
     assert toolset["id"] == original_toolset_id
     # Tools are de-duplicated but order respects first appearance
     assert toolset["tools"] == ["Tool B", "Tool A"]
